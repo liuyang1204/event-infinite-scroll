@@ -1,0 +1,7 @@
+{
+  "name": "event-infinite-scroll#gh-pages",
+  "private": true,
+  "dependencies": {
+    "event-infinite-scroll": "chadliu23/event-infinite-scroll#master"
+  }
+}
