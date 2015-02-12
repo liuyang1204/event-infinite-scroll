@@ -22,11 +22,26 @@ It will raise event when it reaches.
         Polymer('event-infinite-scroll', {
 
             scrollHandler: function () {
-                var scrollTop = this.getScrollTop();
+                var scrollTop = this.getScrollTop(),
+                        self = this;
                 if (scrollTop == 0) {
                     console.log("reach top");
+                    this.fire('loading-up', {
+                        callback: function(items){
+                            var len = items.length;
+                            Array.prototype.unshift.apply(self.data, items);
+                            setTimeout(function(){
+                                self.scrollToItem(len);
+                            }, 0);
+                        }
+                    });
                 } else if (scrollTop === this._target.scrollHeight - this._target.clientHeight) {
                     console.log("reach bottom");
+                    this.fire('loading-down', {
+                        callback: function(items){
+                            Array.prototype.push.apply(self.data, items);
+                        }
+                    });
                 }
                 this.super();
             }

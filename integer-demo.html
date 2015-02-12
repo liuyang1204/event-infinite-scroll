@@ -10,7 +10,7 @@
                 border: 1px solid grey;
             }
         </style>
-            <event-infinite-scroll data="{{data}}" style="height: 100%">
+            <event-infinite-scroll data="{{data}}" style="height: 100%" on-loading-up="{{loadUp}}" on-loading-down="{{loadDown}}">
                 <template>
                     <div class="item">
                         {{model.a}}
@@ -20,7 +20,28 @@
     </template>
     <script>
         Polymer({
-            data: [{a: 1}, {a: 2}, {a: 3}, {a: 4}, {a: 5}, {a: 6}, {a: 7}, {a: 8}, {a: 9}, {a: 10}, {a: 11}, {a: 12}, {a: 13}, {a: 14}, {a: 15}]
+            begin: 1,
+            end: 15,
+            data: [{a: 1}, {a: 2}, {a: 3}, {a: 4}, {a: 5}, {a: 6}, {a: 7}, {a: 8}, {a: 9}, {a: 10}, {a: 11}, {a: 12}, {a: 13}, {a: 14}, {a: 15}],
+            loadUp: function(event, detail, target){
+                var items = [];
+                for(var i=0; i<10; i++) {
+                    items.unshift({a: --this.begin});
+                }
+
+                setTimeout(function(){
+                    detail.callback(items);
+                }, 100);
+            },
+            loadDown: function(event, detail, target){
+                var items = [];
+                for(var i=0; i<10; i++) {
+                    items.push({a: ++this.end});
+                }
+                setTimeout(function(){
+                    detail.callback(items);
+                }, 100);
+            }
         });
     </script>
 </polymer-element>
