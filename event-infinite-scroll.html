@@ -1,5 +1,6 @@
 <link rel="import" href="../polymer/polymer.html">
 <link rel="import" href="../core-list/core-list.html">
+<link rel="import" href="../paper-spinner/paper-spinner.html">
 <!--
 Element providing infinite scroll to track the parentNode on reaching bottom and end.
 It will raise event when it reaches. 
@@ -12,43 +13,85 @@ It will raise event when it reaches.
 @status alpha
 @homepage http://chadliu23.github.io/event-infinite-scroll
 -->
+
 <polymer-element name="event-infinite-scroll" extends="core-list"
                  attributes="">
 
     <template>
-        <shadow></shadow>
+        <style>
+            .spinner-container {
+                height: 40px;
+                -webkit-transition: height 0.3s linear;
+                overflow: hidden;
+            }
+            .spinner-container.hide {
+                height: 0;
+            }
+        </style>
+        <div vertical layout fit>
+            <div horizontal center-center layout class="{{ {'spinner-container': true, hide: !loadingUp} | tokenList}}">
+                <paper-spinner active></paper-spinner>
+            </div>
+            <div flex id="container" style="overflow: auto; position:relative">
+                <shadow></shadow>
+            </div>
+            <div horizontal center-center layout class="{{ {'spinner-container': true, hide: !loadingDown} | tokenList}}">
+                <paper-spinner active></paper-spinner>
+            </div>
+        </div>
     </template>
     <script>
         Polymer('event-infinite-scroll', {
-
+            computed: {
+                'loading': 'loadingUp || loadingDown'
+            },
+            domReady: function () {
+                this.scrollTarget =  this.$.container;
+            },
             //Override to provide dynamic ajax loading
             scrollHandler: function () {
                 var scrollTop = this.getScrollTop(),
                         self = this;
+
+                console.log("scrollTop: " + scrollTop);
+                console.log("scrollHeight: " + this._target.scrollHeight)
+                console.log("clientHeight: " + this._target.clientHeight)
+                console.log("physical height: "+ this._physicalOffset);
+                console.log("virtual Start: "+ this._virtualStart);
+                console.log("physical Start: "+ this._physicalStart);
                 if (scrollTop == 0) {
-                    this.fire('loading-up', {
-                        callback: function(items){
-                            var len = items.length;
-                            Array.prototype.unshift.apply(self.data, items);
-                        }
-                    });
+                    if (!this.loadingUp) {
+                        this.loadingUp = true;
+                        this.fire('loading-up', {
+                            callback: function (items) {
+                                Array.prototype.unshift.apply(self.data, items);
+                                self.loadingUp = false;
+                            }
+                        });
+                    }
                 } else if (scrollTop === this._target.scrollHeight - this._target.clientHeight) {
-                    this.fire('loading-down', {
-                        callback: function(items){
-                            Array.prototype.push.apply(self.data, items);
-                        }
-                    });
+                    console.log("same");
+                    if (!this.loadingDown) {
+                        this.loadingDown = true;
+                        this.setScrollTop(this._target.scrollHeight);
+                        this.fire('loading-down', {
+                            callback: function (items) {
+                                Array.prototype.push.apply(self.data, items);
+                                self.loadingDown = false;
+                            }
+                        });
+                    }
                 }
                 this.super();
             },
 
             // Override to solve the issue https://github.com/Polymer/core-list/issues/73
-            _adjustVirtualIndex: function(splices, group) {
+            _adjustVirtualIndex: function (splices, group) {
                 if (this._targetSize === 0) {
                     return;
                 }
                 var totalDelta = 0;
-                for (var i=0; i<splices.length; i++) {
+                for (var i = 0; i < splices.length; i++) {
                     var s = splices[i];
                     var idx = s.index;
                     var gidx, gitem;
