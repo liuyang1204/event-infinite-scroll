@@ -13,7 +13,7 @@ It will raise event when it reaches.
 @homepage http://chadliu23.github.io/event-infinite-scroll
 -->
 <polymer-element name="event-infinite-scroll" extends="core-list"
-                 attributes="">
+                 attributes="up down">
 
     <template>
         <shadow></shadow>
@@ -35,22 +35,31 @@ It will raise event when it reaches.
                     }, 10);
                 }
             },
+            up: false,
+            down: false,
+            loadingUp: false,
+            loadingDown: false,
             //Override to provide dynamic ajax loading
             scrollHandler: function () {
                 var scrollTop = this.getScrollTop(),
                         self = this;
-                if (scrollTop == 0) {
+                if (scrollTop === 0 && this.up && !this.loadingUp) {
+                    this.loadingUp = true;
                     this.fire('loading-up', {
                         callback: function(items){
                             Array.prototype.unshift.apply(self.data, items);
                             self.animateScroll(true);
+                            self.loadingUp = false;
                         }
                     });
-                } else if (scrollTop === this._target.scrollHeight - this._target.clientHeight) {
+                } else if ((scrollTop === this._target.scrollHeight - this._target.clientHeight) && this.down  && !this.loadingDown) {
+                    this.loadingDown = true;
                     this.fire('loading-down', {
                         callback: function(items){
+                            console.log(items);
                             Array.prototype.push.apply(self.data, items);
                             self.animateScroll(false);
+                            self.loadingDown = false;
                         }
                     });
                 }
