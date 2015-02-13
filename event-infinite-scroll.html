@@ -21,22 +21,18 @@ It will raise event when it reaches.
     <script>
         Polymer('event-infinite-scroll', {
 
+            //Override to provide dynamic ajax loading
             scrollHandler: function () {
                 var scrollTop = this.getScrollTop(),
                         self = this;
                 if (scrollTop == 0) {
-                    console.log("reach top");
                     this.fire('loading-up', {
                         callback: function(items){
                             var len = items.length;
                             Array.prototype.unshift.apply(self.data, items);
-                            setTimeout(function(){
-                                self.scrollToItem(len);
-                            }, 0);
                         }
                     });
                 } else if (scrollTop === this._target.scrollHeight - this._target.clientHeight) {
-                    console.log("reach bottom");
                     this.fire('loading-down', {
                         callback: function(items){
                             Array.prototype.push.apply(self.data, items);
@@ -44,98 +40,52 @@ It will raise event when it reaches.
                     });
                 }
                 this.super();
+            },
+
+            // Override to solve the issue https://github.com/Polymer/core-list/issues/73
+            _adjustVirtualIndex: function(splices, group) {
+                if (this._targetSize === 0) {
+                    return;
+                }
+                var totalDelta = 0;
+                for (var i=0; i<splices.length; i++) {
+                    var s = splices[i];
+                    var idx = s.index;
+                    var gidx, gitem;
+                    if (group) {
+                        gidx = this.data.indexOf(group);
+                        idx += this.virtualIndexForGroup(gidx);
+                    }
+                    // We only need to care about changes happening above the current position
+                    if (idx > this._virtualStart) {
+                        break;
+                    }
+                    var delta = Math.max(s.addedCount - s.removed.length, idx - this._virtualStart);
+                    totalDelta += delta;
+                    this._physicalStart += delta;
+                    this._virtualStart += delta;
+                    if (this._grouped) {
+                        if (group) {
+                            gitem = s.index;
+                        } else {
+                            var g = this.groupForVirtualIndex(s.index);
+                            gidx = g.group;
+                            gitem = g.groupIndex;
+                        }
+                        if (gidx == this._groupStart && gitem < this._groupStartIndex) {
+                            this._groupStartIndex += delta;
+                        }
+                    }
+                }
+                // Adjust offset/scroll position based on total number of items changed
+                if (this._virtualStart < this._physicalCount) {
+                    this._resetIndex(this._getFirstVisibleIndex() || 0);
+                } else {
+                    totalDelta = Math.max((totalDelta / this._rowFactor) * this._physicalAverage, -this._physicalOffset);
+                    this._physicalOffset += totalDelta;
+                    this._scrollTop = this.setScrollTop(this._scrollTop + totalDelta);
+                }
             }
-//		/**
-//       	 * Fired when reach bottom.
-//       	 *
-//         * @event reach-bottom
-//         */
-//
-//        /**
-//       	 * Fired when reach top.
-//       	 *
-//         * @event reach-top
-//         */
-//
-//        /**
-//       	 * When you want to notification
-//       	 *
-//         * @int scrollDenominator
-//         */
-//        scrollDenominator: 1,
-//        observerStatus: true,
-//        observer: null,
-//
-//        /**
-//       	 * You can set your item loading delay time when scroll up infinite
-//       	 *
-//         * @int loadingDelay
-//         */
-//        loadingDelay: 1,
-//
-//        /**
-//       	 * track scroll on ready
-//       	 * otherwise you can call startObserve when ever you want
-//       	 *
-//         * @boolean readyOnStart
-//         */
-//        readyOnStart: true,
-//
-//		ready:function (){
-//			if (this.readyOnStart){
-//				this.startObserve();
-//			}
-//		},
-//		startObserve: function(){
-//			this.parentNode.addEventListener("scroll", function() {
-//      			this.scrolled();
-//    		}.bind( this ));
-//			this.parentNode.addEventListener("mousewheel", function() {
-//				this.scrolledWheel();
-//			}.bind( this ));
-//    		var self = this;
-//    		this.observer = new MutationObserver( function() {
-//		      window.setTimeout( function() {
-//		        if (!self.observerStatus){
-//		          this.observer.disconnect();
-//		          return;
-//		        }
-//		        this.scrolled();
-//
-//		      }.bind( this ), 10 );
-//		    }.bind( this ));
-//		    this.observer.observe( this.parentNode, {
-//		      childList: true,
-//		      subtree: true,
-//		      characterData: true
-//		    });
-//		},
-//		scrolledWheel: function(){
-//			if (this.parentNode.scrollHeight == this.parentNode.clientHeight){
-//				this.scrolled();
-//			}
-//		},
-//		scrolled: function(){
-//		    if(this._isReachBottom()){
-//		    	this.fire("reach-bottom", "");
-//		    }
-//			if(this._isReachTop()){
-//				var oldheight = this.parentNode.scrollHeight;
-//      			var self = this;
-//			   	this.fire("reach-top", "");
-//			   	setTimeout(function (){
-//			        self.parentNode.scrollTop += self.parentNode.scrollHeight - oldheight;
-//			    }, this.loadingDelay);
-//			}
-//		},
-//		_isReachTop: function(){
-//			return ( this.parentNode.scrollTop < this.parentNode.clientHeight/this.scrollDenominator );
-//		},
-//		_isReachBottom: function(){
-//			var scrollBottom = this.parentNode.scrollTop + this.parentNode.clientHeight;
-//		    var belowView = this.parentNode.scrollHeight - scrollBottom;
-//		    return ( belowView < this.parentNode.clientHeight/this.scrollDenominator);
-//		}
         });
     </script>
 
