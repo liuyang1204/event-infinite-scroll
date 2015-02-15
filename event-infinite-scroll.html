@@ -47,7 +47,8 @@ It will raise event when it reaches.
                 <paper-spinner active></paper-spinner>
             </paper-shadow>
             <shadow></shadow>
-            <paper-shadow layered id="downSpinner" class="container" layout center-center horizontal>
+            <paper-shadow layered id="downSpinner" class="container" layout center-center horizontal
+                          hidden?="{{!loadingDown}}">
                 <paper-spinner active></paper-spinner>
             </paper-shadow>
         </div>
