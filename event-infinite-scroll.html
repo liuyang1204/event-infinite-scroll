@@ -1,5 +1,7 @@
 <link rel="import" href="../polymer/polymer.html">
 <link rel="import" href="../core-list/core-list.html">
+<link rel="import" href="../paper-spinner/paper-spinner.html">
+<link rel="import" href="../paper-shadow/paper-shadow.html">
 <!--
 Element providing infinite scroll to track the parentNode on reaching bottom and end.
 It will raise event when it reaches. 
@@ -16,21 +18,54 @@ It will raise event when it reaches.
                  attributes="up down">
 
     <template>
-        <shadow></shadow>
+        <style>
+            #upSpinner {
+                top: -52px;
+                -webkit-transition: top 0.3s linear;
+            }
+
+            #downSpinner {
+                bottom: -52px;
+            }
+
+            .container {
+                z-index: 1;
+                position: absolute;
+                border-radius: 50%;
+                background-color: white;
+                left: 50%;
+                margin-left: -25px;
+                right: 50%;
+                width: 50px;
+                height: 50px;
+                -webkit-transition: bottom 0.3s linear;
+            }
+        </style>
+        <div style="position: relative; overflow: hidden">
+            <paper-shadow layered id="upSpinner" class="container" layout center-center horizontal
+                          hidden?="{{!loadingUp}}">
+                <paper-spinner active></paper-spinner>
+            </paper-shadow>
+            <shadow></shadow>
+            <paper-shadow layered id="downSpinner" class="container" layout center-center horizontal>
+                <paper-spinner active></paper-spinner>
+            </paper-shadow>
+        </div>
     </template>
     <script>
         Polymer('event-infinite-scroll', {
 
-            animateScroll: function(scrollUp){
+            animateScroll: function (scrollUp) {
                 var self = this;
                 requestAnimationFrame(step);
-                var gap = scrollUp? 5 : -5, times = 20;
-                function step () {
-                    setTimeout(function() {
-                        if ( times >= 0 ) {
+                var gap = scrollUp ? 5 : -5, times = 20;
+
+                function step() {
+                    setTimeout(function () {
+                        if (times >= 0) {
                             requestAnimationFrame(step);
                             self.scrollTop = self.scrollTop - gap;
-                            times --;
+                            times--;
                         }
                     }, 10);
                 }
@@ -39,27 +74,67 @@ It will raise event when it reaches.
             down: false,
             loadingUp: false,
             loadingDown: false,
+            minDelay: 1000,
             //Override to provide dynamic ajax loading
+            endLoadingUp: function (items) {
+                Array.prototype.unshift.apply(this.data, items);
+                this.animateScroll(true);
+                this.$.upSpinner.style.top = "-52px";
+                this.loadingUp = false;
+            },
+            endLoadingDown: function (items) {
+                Array.prototype.push.apply(this.data, items);
+                this.animateScroll(false);
+                this.$.downSpinner.style.bottom = "-52px";
+                this.loadingDown = false;
+            },
             scrollHandler: function () {
+                var minDeplayed = false;
+                var loadedItems = undefined;
                 var scrollTop = this.getScrollTop(),
                         self = this;
                 if (scrollTop === 0 && this.up && !this.loadingUp) {
                     this.loadingUp = true;
+                    minDeplayed = false;
+                    loadedItems = undefined;
+                    setTimeout(function () {
+                        minDeplayed = true;
+                        if (loadedItems) {
+                            self.endLoadingUp(loadedItems);
+                        }
+                    }, this.minDelay);
+                    setTimeout(function () {
+                        self.$.upSpinner.style.top = "8px";
+                    }, 0);
                     this.fire('loading-up', {
-                        callback: function(items){
-                            Array.prototype.unshift.apply(self.data, items);
-                            self.animateScroll(true);
-                            self.loadingUp = false;
+                        callback: function (items) {
+                            if (minDeplayed) {
+                                self.endLoadingUp(items);
+                            } else {
+                                loadedItems = items;
+                            }
                         }
                     });
-                } else if ((scrollTop === this._target.scrollHeight - this._target.clientHeight) && this.down  && !this.loadingDown) {
+                } else if ((scrollTop === this._target.scrollHeight - this._target.clientHeight) && this.down && !this.loadingDown) {
                     this.loadingDown = true;
+                    minDeplayed = false;
+                    loadedItems = undefined;
+                    setTimeout(function () {
+                        minDeplayed = true;
+                        if (loadedItems) {
+                            self.endLoadingDown(loadedItems);
+                        }
+                    }, this.minDelay);
+                    setTimeout(function () {
+                        self.$.downSpinner.style.bottom = "8px";
+                    }, 100);
                     this.fire('loading-down', {
-                        callback: function(items){
-                            console.log(items);
-                            Array.prototype.push.apply(self.data, items);
-                            self.animateScroll(false);
-                            self.loadingDown = false;
+                        callback: function (items) {
+                            if (minDeplayed) {
+                                self.endLoadingDown(items);
+                            } else {
+                                loadedItems = items;
+                            }
                         }
                     });
                 }
@@ -67,12 +142,12 @@ It will raise event when it reaches.
             },
 
             // Override to solve the issue https://github.com/Polymer/core-list/issues/73
-            _adjustVirtualIndex: function(splices, group) {
+            _adjustVirtualIndex: function (splices, group) {
                 if (this._targetSize === 0) {
                     return;
                 }
                 var totalDelta = 0;
-                for (var i=0; i<splices.length; i++) {
+                for (var i = 0; i < splices.length; i++) {
                     var s = splices[i];
                     var idx = s.index;
                     var gidx, gitem;
