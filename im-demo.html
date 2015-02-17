@@ -1,0 +1,45 @@
+<link rel="import" href="event-infinite-scroll.html">
+<link rel="import" href="../core-list/core-list.html">
+
+<polymer-element name="im-demo" vertical layout fit>
+    <template>
+        <event-infinite-scroll id="scroll" data="{{data}}" style="height: 100%" on-loading-up="{{loadUp}}" up height="10" flex>
+            <template>
+                <div class="item">
+                    {{model.msg}}
+                </div>
+            </template>
+        </event-infinite-scroll>
+        <div style="padding: 1em; background-color: #158cba">
+            <button on-tap="{{sendMsg}}">Add</button>
+        </div>
+    </template>
+    <script src="../Faker/build/build/faker.js"></script>
+    <script>
+        Polymer({
+            ready: function(){
+                this.data = [];
+                for(var i=0; i<100; i++){
+                    this.data.push({msg: faker.lorem.sentence()});
+                }
+                this.scrollToBottom();
+            },
+            scrollToBottom: function(){
+                var self=this;
+                this.async(function(){
+                    self.$.scroll.scrollToItem(self.data.length);
+                });
+            },
+            loadUp: function(event, detail){
+                var more = [];
+                for(var i=0; i<20; i++){
+                    more.push({msg: faker.lorem.sentence()});
+                }
+                detail.callback(more);
+            },
+            sendMsg: function(){
+
+            }
+        });
+    </script>
+</polymer-element>
