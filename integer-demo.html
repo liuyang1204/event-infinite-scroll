@@ -10,10 +10,10 @@
                 border: 1px solid grey;
             }
         </style>
-            <event-infinite-scroll data="{{data}}" style="height: 100%" on-loading-up="{{loadUp}}" on-loading-down="{{loadDown}}" down up>
-                <template>
+            <event-infinite-scroll data="{{data}}"  on-loading-up="{{loadUp}}" on-loading-down="{{loadDown}}" down up fit>
+                <template repeat="{{data}}">
                     <div class="item">
-                        {{model.a}}
+                        {{a}}
                     </div>
                 </template>
             </event-infinite-scroll>

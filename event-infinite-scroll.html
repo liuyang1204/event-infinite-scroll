@@ -14,8 +14,8 @@ It will raise event when it reaches.
 @status alpha
 @homepage http://chadliu23.github.io/event-infinite-scroll
 -->
-<polymer-element name="event-infinite-scroll" extends="core-list"
-                 attributes="up down">
+<polymer-element name="event-infinite-scroll"
+                 attributes="up down data">
 
     <template>
         <style>
@@ -40,13 +40,19 @@ It will raise event when it reaches.
                 height: 50px;
                 -webkit-transition: bottom 0.3s linear;
             }
+
+            #scroller {
+                overflow: auto;
+            }
         </style>
-        <div style="position: relative; overflow: hidden">
+        <div style="overflow: hidden; position: relative; height:100%">
             <paper-shadow layered id="upSpinner" class="container" layout center-center horizontal
                           hidden?="{{!loadingUp}}">
                 <paper-spinner active></paper-spinner>
             </paper-shadow>
-            <shadow></shadow>
+            <div on-scroll="{{scrollHandler}}" id="scroller" fit>
+                <shadow></shadow>
+            </div>
             <paper-shadow layered id="downSpinner" class="container" layout center-center horizontal
                           hidden?="{{!loadingDown}}">
                 <paper-spinner active></paper-spinner>
@@ -55,9 +61,9 @@ It will raise event when it reaches.
     </template>
     <script>
         Polymer('event-infinite-scroll', {
-
+            templateName: 'itemsTemplate',
             animateScroll: function (scrollUp) {
-                var self = this;
+                var self = this.$.scroller;
                 requestAnimationFrame(step);
                 var gap = scrollUp ? 5 : -5, times = 20;
 
@@ -78,10 +84,18 @@ It will raise event when it reaches.
             minDelay: 1000,
             //Override to provide dynamic ajax loading
             endLoadingUp: function (items) {
+                var self=this;
                 Array.prototype.unshift.apply(this.data, items);
                 this.animateScroll(true);
                 this.$.upSpinner.style.top = "-52px";
                 this.loadingUp = false;
+                this.async(function(){
+                    var height = 0, children = self.children;
+                    for(var i=1; i<=items.length; i++) {
+                        height += children[i].clientHeight;
+                    }
+                    this.$.scroller.scrollTop  = height;
+                });
             },
             endLoadingDown: function (items) {
                 Array.prototype.push.apply(this.data, items);
@@ -92,8 +106,8 @@ It will raise event when it reaches.
             scrollHandler: function () {
                 var minDeplayed = false;
                 var loadedItems = undefined;
-                var scrollTop = this.getScrollTop(),
-                        self = this;
+                var scrollTop = this.$.scroller.scrollTop;
+                self = this;
                 if (scrollTop === 0 && this.up && !this.loadingUp) {
                     this.loadingUp = true;
                     minDeplayed = false;
@@ -116,7 +130,7 @@ It will raise event when it reaches.
                             }
                         }
                     });
-                } else if ((scrollTop === this._target.scrollHeight - this._target.clientHeight) && this.down && !this.loadingDown) {
+                } else if ((scrollTop === this.$.scroller.scrollHeight - this.$.scroller.clientHeight) && this.down && !this.loadingDown) {
                     this.loadingDown = true;
                     minDeplayed = false;
                     loadedItems = undefined;
@@ -140,51 +154,6 @@ It will raise event when it reaches.
                     });
                 }
                 this.super();
-            },
-
-            // Override to solve the issue https://github.com/Polymer/core-list/issues/73
-            _adjustVirtualIndex: function (splices, group) {
-                if (this._targetSize === 0) {
-                    return;
-                }
-                var totalDelta = 0;
-                for (var i = 0; i < splices.length; i++) {
-                    var s = splices[i];
-                    var idx = s.index;
-                    var gidx, gitem;
-                    if (group) {
-                        gidx = this.data.indexOf(group);
-                        idx += this.virtualIndexForGroup(gidx);
-                    }
-                    // We only need to care about changes happening above the current position
-                    if (idx > this._virtualStart) {
-                        break;
-                    }
-                    var delta = Math.max(s.addedCount - s.removed.length, idx - this._virtualStart);
-                    totalDelta += delta;
-                    this._physicalStart += delta;
-                    this._virtualStart += delta;
-                    if (this._grouped) {
-                        if (group) {
-                            gitem = s.index;
-                        } else {
-                            var g = this.groupForVirtualIndex(s.index);
-                            gidx = g.group;
-                            gitem = g.groupIndex;
-                        }
-                        if (gidx == this._groupStart && gitem < this._groupStartIndex) {
-                            this._groupStartIndex += delta;
-                        }
-                    }
-                }
-                // Adjust offset/scroll position based on total number of items changed
-                if (this._virtualStart < this._physicalCount) {
-                    this._resetIndex(this._getFirstVisibleIndex() || 0);
-                } else {
-                    totalDelta = Math.max((totalDelta / this._rowFactor) * this._physicalAverage, -this._physicalOffset);
-                    this._physicalOffset += totalDelta;
-                    this._scrollTop = this.setScrollTop(this._scrollTop + totalDelta);
-                }
             }
         });
     </script>
