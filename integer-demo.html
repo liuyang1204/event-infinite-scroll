@@ -1,6 +1,6 @@
 <link rel="import" href="event-infinite-scroll.html">
 
-<polymer-element name="integer-demo">
+<polymer-element name="integer-demo" vertical layout fit>
     <template>
         <style>
             .item{
@@ -9,7 +9,7 @@
                 border: 1px solid grey;
             }
         </style>
-            <event-infinite-scroll id="infscroll" data="{{data}}"  on-loading-up="{{loadUp}}" on-loading-down="{{loadDown}}"  up>
+            <event-infinite-scroll id="infscroll" data="{{data}}"  on-loading-up="{{loadUp}}" on-loading-down="{{loadDown}}"  up flex>
                 <template repeat="{{data}}">
                     <div class="item">
                         {{a}}
