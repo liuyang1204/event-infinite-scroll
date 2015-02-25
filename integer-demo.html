@@ -10,13 +10,14 @@
                 border: 1px solid grey;
             }
         </style>
-            <event-infinite-scroll data="{{data}}"  on-loading-up="{{loadUp}}" on-loading-down="{{loadDown}}" down up fit>
+            <event-infinite-scroll id="infscroll" data="{{data}}"  on-loading-up="{{loadUp}}" on-loading-down="{{loadDown}}"  up staybottom>
                 <template repeat="{{data}}">
                     <div class="item">
                         {{a}}
                     </div>
                 </template>
             </event-infinite-scroll>
+            <button on-tap="{{addItem}}">add</button>
     </template>
     <script>
         Polymer({
@@ -41,6 +42,10 @@
                 setTimeout(function(){
                     detail.callback(items);
                 }, 1000);
+            },
+            addItem: function(){
+                this.data.push({a: ++ this.end});
+                this.$.infscroll.refresh();
             }
         });
     </script>
