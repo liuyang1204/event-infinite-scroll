@@ -22,7 +22,6 @@
   ],
   "dependencies": {
     "polymer": "~0.5.4",
-    "core-list": "Polymer/core-list#~0.5.4",
     "paper-spinner": "Polymer/paper-spinner#~0.5.4",
     "paper-shadow": "Polymer/paper-shadow#~0.5.4"
   }
