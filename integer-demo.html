@@ -9,7 +9,7 @@
                 border: 1px solid grey;
             }
         </style>
-            <event-infinite-scroll id="infscroll" data="{{data}}"  on-loading-up="{{loadUp}}" on-loading-down="{{loadDown}}"  up staybottom>
+            <event-infinite-scroll id="infscroll" data="{{data}}"  on-loading-up="{{loadUp}}" on-loading-down="{{loadDown}}"  up>
                 <template repeat="{{data}}">
                     <div class="item">
                         {{a}}
@@ -44,7 +44,7 @@
             },
             addItem: function(){
                 this.data.push({a: ++ this.end});
-                this.$.infscroll.refresh();
+                this.$.infscroll.stayBottom();
             }
         });
     </script>
