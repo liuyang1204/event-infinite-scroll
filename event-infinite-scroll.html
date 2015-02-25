@@ -25,6 +25,7 @@ It will raise event when it reaches.
 
             #downSpinner {
                 bottom: -52px;
+                -webkit-transition: bottom 0.3s linear;
             }
 
             .container {
@@ -37,7 +38,6 @@ It will raise event when it reaches.
                 right: 50%;
                 width: 50px;
                 height: 50px;
-                -webkit-transition: bottom 0.3s linear;
             }
 
             #scroller {
@@ -67,6 +67,12 @@ It will raise event when it reaches.
                 var gapBottom = scroller.scrollHeight - scroller.clientHeight - scroller.scrollTop;
                 this.async(function () {
                     scroller.scrollTop = scroller.scrollHeight - scroller.clientHeight - gapBottom;
+                });
+            },
+            scrollToBottom: function () {
+                var scroller = this.$.scroller;
+                this.async(function () {
+                    scroller.scrollTop = scroller.scrollHeight - scroller.clientHeight;
                 });
             },
             animateScroll: function (scrollUp) {
@@ -149,7 +155,7 @@ It will raise event when it reaches.
                     }, this.minDelay);
                     setTimeout(function () {
                         self.$.downSpinner.style.bottom = "8px";
-                    }, 100);
+                    }, 0);
                     this.fire('loading-down', {
                         callback: function (items) {
                             if (minDeplayed) {
