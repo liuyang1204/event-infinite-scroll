@@ -102,13 +102,7 @@ It will raise event when it reaches.
                 this.animateScroll(true);
                 this.$.upSpinner.style.top = "-52px";
                 this.loadingUp = false;
-                this.async(function () {
-                    var height = 0, children = self.children;
-                    for (var i = 1; i <= items.length; i++) {
-                        height += children[i].clientHeight;
-                    }
-                    this.$.scroller.scrollTop = height;
-                });
+                this.stayBottom();
             },
             endLoadingDown: function (items) {
                 Array.prototype.push.apply(this.data, items);
