@@ -115,7 +115,7 @@ It will raise event when it reaches.
                 var loadedItems = undefined;
                 var scrollTop = this.$.scroller.scrollTop;
                 self = this;
-                if (scrollTop === 0 && this.up && !this.loadingUp) {
+                if (this.up && !this.loadingUp && this.$.scroller.scrollHeight > this.$.scroller.clientHeight && scrollTop === 0) {
                     this.loadingUp = true;
                     minDeplayed = false;
                     loadedItems = undefined;
